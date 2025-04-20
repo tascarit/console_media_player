@@ -27,3 +27,5 @@ Preview image:
 Linux installation guide:
 
 Download and build opencv: [link](https://docs.opencv.org/4.x/d7/d9f/tutorial_linux_install.html)
+
+`g++ main.cpp -o cmp` if not works try this: `g++ main.cpp -o cmp -I{Path to OpenCV include} -L{Path to OpenCV Libraries}`
