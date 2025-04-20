@@ -22,3 +22,8 @@ Can show images or play mp4 files in console using OpenCV
 Preview image:
 
 ![alt text](https://i.ibb.co/0RdCHgST/20-04-2025-203447.jpg)
+
+
+Linux installation guide:
+
+Download and build opencv: [link](https://docs.opencv.org/4.x/d7/d9f/tutorial_linux_install.html)
