@@ -6,6 +6,14 @@
 
 #include "defs.hpp"
 
+#if defined(__linux__)
+#define PLATFORM "linux"
+#elif defined(_WIN32) 
+#define PLATFORM "windows"
+#else
+#define PLATFORM "windows"
+#endif
+
 double* ArgProcess(int argc, char* argv[]);
 int PowerCheck(int power);
 void FrameShow(cv::Mat image, int contrast, bool advanced, bool video);
@@ -84,7 +92,8 @@ void Start(int argc, char* argv[]) {
 			cv::resize(img, frame, endsize, 0.5, 0.5, cv::INTER_LINEAR);
 			FrameShow(frame, contrast, advanced, video);
 			cv::waitKey(fps);
-			system("cls");
+			if (PLATFORM == "windows")	system("cls");
+			else system("clear");
 		}
 	}
 
