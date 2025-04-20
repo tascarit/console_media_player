@@ -8,7 +8,7 @@
 
 double* ArgProcess(int argc, char* argv[]);
 int PowerCheck(int power);
-void FrameShow(cv::Mat image, int contrast, bool advanced);
+void FrameShow(cv::Mat image, int contrast, bool advanced, bool video);
 int to_92(int index);
 
 void Start(int argc, char* argv[]) {
@@ -62,11 +62,11 @@ void Start(int argc, char* argv[]) {
 		cv::Mat mat = cv::imread(path, 0);
 		cv::Mat image;
 		cv::Size startSize = mat.size();
-		cv::Size endsize((startSize.width / 12) * s, (startSize.height / 12) * s);
+		cv::Size endsize((startSize.width / 12) * s, (startSize.height / 24) * s);
 
 		cv::resize(mat, image, endsize, 0.5, 0.5, cv::INTER_LINEAR);
 
-		FrameShow(image, contrast, advanced);
+		FrameShow(image, contrast, advanced, video);
 	}
 	else {
 		cv::VideoCapture cap(path);
@@ -82,7 +82,7 @@ void Start(int argc, char* argv[]) {
 			cv::Size endsize((startSize.width / 24) * s, (startSize.height / 24) * s);
 
 			cv::resize(img, frame, endsize, 0.5, 0.5, cv::INTER_LINEAR);
-			FrameShow(frame, contrast, advanced);
+			FrameShow(frame, contrast, advanced, video);
 			cv::waitKey(fps);
 			system("cls");
 		}
@@ -120,12 +120,12 @@ double* ArgProcess(int argc, char* argv[]) {
 
 int PowerCheck(int power) { return (0 <= power <= 8) ? abs(power) : ((power < 0) ? 0 : ((power > 8) ? 8 : 0)); }
 
-void FrameShow(cv::Mat image, int contrast, bool advanced) {
-	int width = image.size().width;
+void FrameShow(cv::Mat image, int contrast, bool advanced, bool video) {
+	int width = (!video) ? image.size().width : image.size().width*3;
 	int height = image.size().height;
 
 	for (int i = 0; i < height; i++) {
-		for (int j = 0; j < width * 3; j++) {
+		for (int j = 0; j < width; j++) {
 			int power = (advanced) ? to_92(abs(image.at<uint_fast8_t>(i, j))) : ceil(abs(log2(image.at<uint_fast8_t>(i, j))));
 			char c = (power > 0 && power > contrast) ? ((!advanced) ? alphabet[power] : advancedAlphabet[power]) : ' ';
 			std::cerr << c;
