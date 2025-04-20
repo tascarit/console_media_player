@@ -18,3 +18,7 @@ Can show images or play mp4 files in console using OpenCV
 --advanced *(to use all 92 ASCII printable characters)*
 
 **the {} symbols should not be added**
+
+Preview image:
+
+![alt text](https://i.ibb.co/0RdCHgST/20-04-2025-203447.jpg)
