@@ -15,7 +15,7 @@ Can show images or play mp4 files in console using OpenCV
 
 --video *(to pass videos)*
 
---advanced *(to use 34 ASCII printable characters)*
+--advanced *(to use 34 ASCII symbols including 0 and 1)*
 
 --realtime *(no general video buffering, but frame buffering will still work)*
 
@@ -30,9 +30,9 @@ Preview image:
 
 Linux (Debian 12) installation guide:
 
-Dependencies : git 2.39.5 or higher, cmake 3.25.1 or higher, make
+Dependencies : git 2.39.5 or higher, cmake 3.25.1 or higher, make v4.3 or higher, g++ v12.2 or higher  
 
-Download and build (opencv)[https://github.com/opencv/opencv]
+Download and build [opencv](https://github.com/opencv/opencv)
 
 Example:
 ```
@@ -54,7 +54,7 @@ When OpenCV is installed, download and build CMP:
 cd ~/Downloads
 git clone https://github.com/tascarit/console_media_player
 cd console_media_player
-g++ main.cpp -o cmp -I/usr/local/include/opencv4 -L/usr/local/lib -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_videoio -lopencv_core
+g++ main.cpp -o cmp -I/usr/local/include/opencv4 -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_videoio -lopencv_core
 ```
 
 Example usage:
