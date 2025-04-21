@@ -12,16 +12,16 @@
 #define PLATFORM "linux"
 #elif defined(_WIN32) 
 #define PLATFORM "windows"
+#include <Windows.h>
 #else
 #define PLATFORM "windows"
 #endif
 
-#define ARGS_SIZE 8
-
 int PowerCheck(int power);
-std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool advanced, bool old, double s);
+std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool advanced, bool old, double s, bool colored);
 int to_34(int index);
-std::string TranslateToAscii(cv::Mat image, int contrast, bool advanced, bool video, bool old);
+std::string TranslateToAscii(cv::Mat image, int contrast, bool advanced, bool video, bool old, cv::Mat color, bool colored);
+std::string GetANSIICode(cv::Vec3b pixel);
 
 void Start(int argc, char* argv[]) {
 	int contrast = 1;
@@ -32,6 +32,7 @@ void Start(int argc, char* argv[]) {
 	bool old = false;
 	bool advanced = false;
 	bool realtime = false;
+	bool colored = false;
 
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i - 1], "-p") == 0) {
@@ -58,6 +59,9 @@ void Start(int argc, char* argv[]) {
 		else if (strcmp(argv[i], "--realtime") == 0) {
 			realtime=true;
 		}
+		else if (strcmp(argv[i], "--color") == 0) {
+			colored = true;
+		}
 	}
 
 	if (path.size() == 0) {
@@ -67,18 +71,46 @@ void Start(int argc, char* argv[]) {
 	if (s < 0.1) {
 		s = 0.1;
 	}
+	
+	// IDK Should i keep or delete this part because for me it works fine without enabling terminal processing... (windows 11)
+
+	/*if (colored) {
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		if (hConsole == INVALID_HANDLE_VALUE) {
+			std::cerr << "Error Getting console handle\n";
+			return;
+		}
+
+		DWORD mode;
+		if (!GetConsoleMode(hConsole, &mode)) {
+			std::cerr << "Error Getting console mode\n";
+			return;
+		}
+
+		if (!SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)) {
+			std::cerr << "Error setting console mode\n";
+			return;
+		}
+
+		CloseHandle(hConsole);
+	}*/
 
 	fps = 1000 / fps;
 
 	if (!video) {
-		cv::Mat mat = cv::imread(path, 0);
-		cv::resize(mat, mat, cv::Size((mat.size().width / 12) * s, (mat.size().height / 24) * s), 0.5, 0.5, cv::INTER_LINEAR);
+		cv::Mat image = cv::imread(path);
+		cv::Mat mat;
 
-		std::string frame = TranslateToAscii(mat, contrast, advanced, false, old);
+		cv::resize(image, image, cv::Size((image.size().width / 12) * s, (image.size().height / 24) * s), 0.5, 0.5, cv::INTER_LINEAR);
+
+		cv::cvtColor(image, mat, cv::COLOR_BGR2GRAY);
+
+		std::string frame = TranslateToAscii(mat, contrast, advanced, false, old, image, colored);
 
 		std::cerr << frame << std::endl;
 
 		mat.release();
+		image.release();
 	}
 	else {
 		cv::VideoCapture cap(path);
@@ -91,13 +123,17 @@ void Start(int argc, char* argv[]) {
 
 			while (cap.read(frame)) {
 
-				cv::resize(frame, frame, cv::Size((frame.size().width / 24) * s, (frame.size().height / 24) * s), 0.5, 0.5, cv::INTER_LINEAR);
+				cv::Mat gray;
 
-				std::string output = TranslateToAscii(frame, contrast, advanced, video, old);
+				cv::resize(frame, frame, cv::Size((frame.size().width / 12) * s, (frame.size().height / 24) * s), 0.5, 0.5);
+				cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+
+				std::string output = TranslateToAscii(gray, contrast, advanced, video, old, frame, colored);
 				std::cerr << output << std::endl;
 				std::this_thread::sleep_for(std::chrono::milliseconds(fps*2));
 					
 				frame.release();
+				gray.release();
 
 				(PLATFORM == "windows") ? system("cls") : system("clear");
 			}
@@ -105,7 +141,7 @@ void Start(int argc, char* argv[]) {
 			cap.release();
 		}
 		else {
-			std::vector<std::string> videoMatrix = Bufferize(cap, contrast, advanced, old, s);
+			std::vector<std::string> videoMatrix = Bufferize(cap, contrast, advanced, old, s, colored);
 
 			cap.release();
 
@@ -123,15 +159,20 @@ void Start(int argc, char* argv[]) {
 
 int PowerCheck(int power) { return (0 <= power <= 8) ? abs(power) : ((power < 0) ? 0 : ((power > 8) ? 8 : 0)); }
 
-std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool advanced, bool old, double s) {
+std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool advanced, bool old, double s, bool colored) {
 	std::vector<std::string> ret;
 	cv::Mat image;
 	int totalFrames = cap.get(cv::CAP_PROP_FRAME_COUNT);
 	int currentFrame = 1;
 
 	while (cap.read(image)) {
-		cv::resize(image, image, cv::Size(round((image.size().width / 24) * s), round((image.size().height / 24) * s)), 0.5, 0.5, cv::INTER_LINEAR);
-		std::string frame = TranslateToAscii(image, contrast, advanced, true, old);
+
+		cv::Mat gray;
+
+		cv::resize(image, image, cv::Size(round((image.size().width / 12) * s), round((image.size().height / 24) * s)), 0.5, 0.5, cv::INTER_LINEAR);
+		cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+
+		std::string frame = TranslateToAscii(gray, contrast, advanced, true, old, image, colored);
 		ret.push_back(frame);
 
 		std::cerr << "Buffering...\n[";
@@ -150,16 +191,20 @@ std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool adva
 	return ret;
 }
 
-std::string TranslateToAscii(cv::Mat image, int contrast, bool advanced, bool video, bool old) {
+std::string TranslateToAscii(cv::Mat image, int contrast, bool advanced, bool video, bool old, cv::Mat color, bool colored) {
 	std::string ret;
-	int width = (!video) ? image.size().width : image.size().width * 3;
+	int width = image.size().width;
 	int height = image.size().height;
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
 			int power = (old) ? round(abs(log2(image.at<uint_fast8_t>(i, j)))) : ((advanced) ? to_34(abs(image.at<uint_fast8_t>(i, j))) : image.at<uint_fast8_t>(i, j) / (256 / strlen(alphabet)));
 			char c = (power > 0 && power > contrast) ? ((!advanced) ? alphabet[power] : advancedAlphabet[power]) : ' ';
-			ret += c;
+
+			cv::Vec3b pixel = color.at<cv::Vec3b>(i, j);
+			std::string color = GetANSIICode(pixel);
+
+			ret += (colored) ? ((c != ' ') ? (color + c + "\033[0m") : (" ")) : std::string(1,c);
 		}
 		ret += "\n";
 	}
@@ -169,4 +214,12 @@ std::string TranslateToAscii(cv::Mat image, int contrast, bool advanced, bool vi
 
 int to_34(int index) {
 	return (34 * ((100 * index) / 256)) / 100;
+}
+
+std::string GetANSIICode(cv::Vec3b pixel) {
+	int blue = pixel[0];
+	int green = pixel[1];
+	int red = pixel[2];
+
+	return "\033[38;2;" + std::to_string(red) + ';' + std::to_string(green) + ';' + std::to_string(blue) + 'm';
 }
