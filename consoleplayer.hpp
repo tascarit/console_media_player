@@ -14,6 +14,8 @@
 #define PLATFORM "windows"
 #endif
 
+#define ARGS_SIZE 8
+
 double* ArgProcess(int argc, char* argv[]);
 int PowerCheck(int power);
 std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool advanced, bool old, double s);
@@ -22,7 +24,8 @@ std::string TranslateToAscii(cv::Mat image, int contrast, bool advanced, bool vi
 
 void Start(int argc, char* argv[]) {
 
-	double* args = ArgProcess(argc, argv);
+	double* args = (double*)malloc(sizeof(int) * ARGS_SIZE);
+	args = ArgProcess(argc, argv);
 	int contrast = 1;
 	std::string path = "";
 	double s = 1;
@@ -64,6 +67,8 @@ void Start(int argc, char* argv[]) {
 			}
 		}
 	}
+
+	free(args);
 
 	if (path.size() == 0) {
 		std::cout << "No path has been passed." << path << std::endl;
@@ -127,7 +132,7 @@ void Start(int argc, char* argv[]) {
 }
 
 double* ArgProcess(int argc, char* argv[]) {
-	double args[8] = { -1, -1, -1, -1, -1, -1, -1, -1};
+	double args[ARGS_SIZE] = { -1, -1, -1, -1, -1, -1, -1, -1};
 
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i - 1], "-p") == 0) {
