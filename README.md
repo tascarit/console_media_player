@@ -56,8 +56,10 @@ When OpenCV is installed, download and build CMP:
 cd ~/Downloads
 git clone https://github.com/tascarit/console_media_player
 cd console_media_player
-g++ main.cpp -o cmp -I/usr/local/include/opencv4 -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_videoio -lopencv_core
+g++ main.cpp -o cmp -I/usr/local/include/opencv4 -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_videoio -lopencv_core -L/usr/local/lib
 ```
+
+After compiling it may not add the OpenCV libraries directory and say something like: `error while loading shared libraries`, in this case you should add `opencv.conf` file inside /etc/ld.so.conf.d/, and then put this line int the file: `/usr/local/lib`, then run: `sudo ldconfig` to update libraries path and after that you should be able to run the file.
 
 Example usage:
 
