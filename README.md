@@ -21,7 +21,7 @@ Can show images or play mp4 files in console using OpenCV
 
 Preview image:
 
-![alt text](https://i.ibb.co/0RdCHgST/20-04-2025-203447.jpg)
+![alt text](https://i.ibb.co/q3dHPStC/21-04-2025-105502.jpg)
 
 
 Linux installation guide:
