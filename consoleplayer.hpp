@@ -16,7 +16,7 @@
 
 #define ARGS_SIZE 8
 
-double* ArgProcess(int argc, char* argv[]);
+void ArgProcess(int argc, char* argv[], double **args);
 int PowerCheck(int power);
 std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool advanced, bool old, double s);
 int to_34(int index);
@@ -24,8 +24,12 @@ std::string TranslateToAscii(cv::Mat image, int contrast, bool advanced, bool vi
 
 void Start(int argc, char* argv[]) {
 
-	double* args = (double*)malloc(sizeof(int) * ARGS_SIZE);
-	args = ArgProcess(argc, argv);
+	double* args = (double*) malloc(sizeof(double)*ARGS_SIZE);
+	
+	for (int i = 0; i < ARGS_SIZE; i++) {
+		args[i] = -1;
+	}
+
 	int contrast = 1;
 	std::string path = "";
 	double s = 1;
@@ -35,7 +39,10 @@ void Start(int argc, char* argv[]) {
 	bool advanced = false;
 	bool realtime = false;
 
-	for (int i = 0; i < 8; i++) {
+	ArgProcess(argc, argv, &args);
+
+	for (int i = 0; i < ARGS_SIZE; i++) {
+		std::cout << args[i] << std::endl;
 		if ((int)args[i] != -1) {
 			switch (i) {
 			case 0:
@@ -131,37 +138,34 @@ void Start(int argc, char* argv[]) {
 	exit(0);
 }
 
-double* ArgProcess(int argc, char* argv[]) {
-	double args[ARGS_SIZE] = { -1, -1, -1, -1, -1, -1, -1, -1};
+void ArgProcess(int argc, char* argv[], double** args) {
 
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i - 1], "-p") == 0) {
-			args[0] = i;
+			*args[0] = i;
 		}
 		else if (strcmp(argv[i - 1], "-c") == 0) {
-			args[1] = atoi(argv[i]);
+			*args[1] = atoi(argv[i]);
 		}
 		else if (strcmp(argv[i], "--video") == 0) {
-			args[2] = 1;
+			*args[2] = 1;
 		}
 		else if (strcmp(argv[i - 1], "-s") == 0) {
-			args[3] = atof(argv[i]);
+			*args[3] = atof(argv[i]);
 		}
 		else if (strcmp(argv[i - 1], "-fps") == 0) {
-			args[4] = atof(argv[i]);
+			*args[4] = atof(argv[i]);
 		}
 		else if (strcmp(argv[i], "--advanced") == 0) {
-			args[5] = 1;
+			*args[5] = 1;
 		}
 		else if (strcmp(argv[i], "--old") == 0) {
-			args[6] = 1;
+			*args[6] = 1;
 		}
 		else if (strcmp(argv[i], "--realtime") == 0) {
-			args[7] = 1;
+			*args[7] = 1;
 		}
 	}
-
-	return args;
 }
 
 int PowerCheck(int power) { return (0 <= power <= 8) ? abs(power) : ((power < 0) ? 0 : ((power > 8) ? 8 : 0)); }
