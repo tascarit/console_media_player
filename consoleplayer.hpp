@@ -3,6 +3,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 #include "defs.hpp"
 
@@ -93,8 +95,8 @@ void Start(int argc, char* argv[]) {
 
 				std::string output = TranslateToAscii(frame, contrast, advanced, video, old);
 				std::cerr << output << std::endl;
-				cv::waitKey(fps);
-
+				std::this_thread::sleep_for(std::chrono::milliseconds(fps*2));
+					
 				frame.release();
 
 				(PLATFORM == "windows") ? system("cls") : system("clear");
@@ -109,7 +111,7 @@ void Start(int argc, char* argv[]) {
 
 			for (size_t i = 0; i < videoMatrix.size(); i++) {
 				std::cerr << videoMatrix[i] << std::endl;
-				cv::waitKey(fps);
+				std::this_thread::sleep_for(std::chrono::milliseconds(fps*2));
 
 				(PLATFORM == "windows") ? system("cls") : system("clear");
 			}
