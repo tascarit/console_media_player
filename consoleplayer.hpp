@@ -16,20 +16,12 @@
 
 #define ARGS_SIZE 8
 
-void ArgProcess(int argc, char* argv[], double **args);
 int PowerCheck(int power);
 std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool advanced, bool old, double s);
 int to_34(int index);
 std::string TranslateToAscii(cv::Mat image, int contrast, bool advanced, bool video, bool old);
 
 void Start(int argc, char* argv[]) {
-
-	double* args = (double*) malloc(sizeof(double)*ARGS_SIZE);
-	
-	for (int i = 0; i < ARGS_SIZE; i++) {
-		args[i] = -1;
-	}
-
 	int contrast = 1;
 	std::string path = "";
 	double s = 1;
@@ -39,43 +31,32 @@ void Start(int argc, char* argv[]) {
 	bool advanced = false;
 	bool realtime = false;
 
-	ArgProcess(argc, argv, &args);
-
-	for (int i = 0; i < ARGS_SIZE; i++) {
-		std::cout << args[i] << std::endl;
-		if ((int)args[i] != -1) {
-			switch (i) {
-			case 0:
-				path = argv[(int)args[i]];
-				break;
-			case 1:
-				contrast = args[i];
-				break;
-			case 3:
-				s = args[i];
-				break;
-			case 2:
-				video = true;
-				break;
-			case 4:
-				fps = (int)args[i];
-				break;
-			case 5:
-				advanced = true;
-				break;
-			case 6:
-				old = true;
-				break;
-			case 7:
-				realtime = true;
-				break;
-			default:
-				break;
-			}
+	for (int i = 1; i < argc; i++) {
+		if (strcmp(argv[i - 1], "-p") == 0) {
+			path = argv[(int)i];
+		}
+		else if (strcmp(argv[i - 1], "-c") == 0) {
+			contrast = atoi(argv[i]);
+		}
+		else if (strcmp(argv[i], "--video") == 0) {
+			video = true;
+		}
+		else if (strcmp(argv[i - 1], "-s") == 0) {
+			s = atof(argv[i]);
+		}
+		else if (strcmp(argv[i - 1], "-fps") == 0) {
+			fps = atof(argv[i]);
+		}
+		else if (strcmp(argv[i], "--advanced") == 0) {
+			advanced = true;
+		}
+		else if (strcmp(argv[i], "--old") == 0) {
+			old = true;
+		}
+		else if (strcmp(argv[i], "--realtime") == 0) {
+			realtime=true;
 		}
 	}
-
-	free(args);
 
 	if (path.size() == 0) {
 		std::cout << "No path has been passed." << path << std::endl;
@@ -136,36 +117,6 @@ void Start(int argc, char* argv[]) {
 	}
 
 	exit(0);
-}
-
-void ArgProcess(int argc, char* argv[], double** args) {
-
-	for (int i = 1; i < argc; i++) {
-		if (strcmp(argv[i - 1], "-p") == 0) {
-			*args[0] = i;
-		}
-		else if (strcmp(argv[i - 1], "-c") == 0) {
-			*args[1] = atoi(argv[i]);
-		}
-		else if (strcmp(argv[i], "--video") == 0) {
-			*args[2] = 1;
-		}
-		else if (strcmp(argv[i - 1], "-s") == 0) {
-			*args[3] = atof(argv[i]);
-		}
-		else if (strcmp(argv[i - 1], "-fps") == 0) {
-			*args[4] = atof(argv[i]);
-		}
-		else if (strcmp(argv[i], "--advanced") == 0) {
-			*args[5] = 1;
-		}
-		else if (strcmp(argv[i], "--old") == 0) {
-			*args[6] = 1;
-		}
-		else if (strcmp(argv[i], "--realtime") == 0) {
-			*args[7] = 1;
-		}
-	}
 }
 
 int PowerCheck(int power) { return (0 <= power <= 8) ? abs(power) : ((power < 0) ? 0 : ((power > 8) ? 8 : 0)); }
