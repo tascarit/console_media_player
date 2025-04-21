@@ -1,5 +1,5 @@
 # console_media_player
-Can show images or play mp4 files in console using OpenCV
+Can show colored images or play mp4 files in console using OpenCV
 
 ### DEAD BRAINCELLS CODE JUMPSCARE ALERT!!!
 
@@ -21,11 +21,13 @@ Can show images or play mp4 files in console using OpenCV
 
 --old *(use old logariphmic pixel to character converting)*
 
+-- color *(translates to colored symbols, this works only on windows 10+ and only in console)*
+
 **the {} symbols should not be added**
 
 Preview image:
 
-![alt text](https://i.imgur.com/4xVG5bI.jpeg)
+![alt text](https://i.imgur.com/nAapd2R.jpeg)
 
 
 Linux (Debian 12) installation guide:
