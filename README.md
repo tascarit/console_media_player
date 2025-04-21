@@ -21,7 +21,7 @@ Can show colored images or play mp4 files in console using OpenCV
 
 --old *(use old logariphmic pixel to character converting)*
 
--- color *(translates to colored symbols, this works only on windows 10+ and only in console)*
+-- color *(translates to colored symbols, this works only on windows 10+/linux/unix and only in console)*
 
 **the {} symbols should not be added**
 
