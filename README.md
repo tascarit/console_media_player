@@ -56,3 +56,10 @@ git clone https://github.com/tascarit/console_media_player
 cd console_media_player
 g++ main.cpp -o cmp -I/usr/local/include/opencv4 -L/usr/local/lib -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lopencv_videoio -lopencv_core
 ```
+
+Example usage:
+
+```
+./main -p PATH --video --realtime
+```
+
