@@ -16,8 +16,9 @@
 
 double* ArgProcess(int argc, char* argv[]);
 int PowerCheck(int power);
-void FrameShow(cv::Mat image, int contrast, bool advanced, bool video);
-int to_92(int index);
+std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool advanced, bool old, double s);
+int to_34(int index);
+std::string TranslateToAscii(cv::Mat image, int contrast, bool advanced, bool video, bool old);
 
 void Start(int argc, char* argv[]) {
 
@@ -27,9 +28,11 @@ void Start(int argc, char* argv[]) {
 	double s = 1;
 	int fps = 60;
 	bool video = false;
+	bool old = false;
 	bool advanced = false;
+	bool realtime = false;
 
-	for (int i = 0; i < 7; i++) {
+	for (int i = 0; i < 8; i++) {
 		if ((int)args[i] != -1) {
 			switch (i) {
 			case 0:
@@ -50,6 +53,12 @@ void Start(int argc, char* argv[]) {
 			case 5:
 				advanced = true;
 				break;
+			case 6:
+				old = true;
+				break;
+			case 7:
+				realtime = true;
+				break;
 			default:
 				break;
 			}
@@ -64,36 +73,53 @@ void Start(int argc, char* argv[]) {
 		s = 0.1;
 	}
 
-	fps = 1000 / fps * 2;
+	fps = 1000 / fps;
 
 	if (!video) {
 		cv::Mat mat = cv::imread(path, 0);
-		cv::Mat image;
-		cv::Size startSize = mat.size();
-		cv::Size endsize((startSize.width / 12) * s, (startSize.height / 24) * s);
+		cv::resize(mat, mat, cv::Size((mat.size().width / 12) * s, (mat.size().height / 24) * s), 0.5, 0.5, cv::INTER_LINEAR);
 
-		cv::resize(mat, image, endsize, 0.5, 0.5, cv::INTER_LINEAR);
+		std::string frame = TranslateToAscii(mat, contrast, advanced, false, old);
 
-		FrameShow(image, contrast, advanced, video);
+		std::cerr << frame << std::endl;
+
+		mat.release();
 	}
 	else {
 		cv::VideoCapture cap(path);
-		cv::Mat img;
-		cv::Mat frame;
 
 		std::ios_base::sync_with_stdio(false);
 		std::cin.tie(NULL);
 
-		while (true) {
-			cap.read(img);
-			cv::Size startSize = img.size();
-			cv::Size endsize((startSize.width / 24) * s, (startSize.height / 24) * s);
+		if (realtime) {
+			cv::Mat frame;
 
-			cv::resize(img, frame, endsize, 0.5, 0.5, cv::INTER_LINEAR);
-			FrameShow(frame, contrast, advanced, video);
-			cv::waitKey(fps);
-			if (PLATFORM == "windows")	system("cls");
-			else system("clear");
+			while (cap.read(frame)) {
+
+				cv::resize(frame, frame, cv::Size((frame.size().width / 24) * s, (frame.size().height / 24) * s), 0.5, 0.5, cv::INTER_LINEAR);
+
+				std::string output = TranslateToAscii(frame, contrast, advanced, video, old);
+				std::cerr << output << std::endl;
+				cv::waitKey(fps);
+
+				frame.release();
+
+				(PLATFORM == "windows") ? system("cls") : system("clear");
+			}
+
+			cap.release();
+		}
+		else {
+			std::vector<std::string> videoMatrix = Bufferize(cap, contrast, advanced, old, s);
+
+			cap.release();
+
+			for (size_t i = 0; i < videoMatrix.size(); i++) {
+				std::cerr << videoMatrix[i] << std::endl;
+				cv::waitKey(fps);
+
+				(PLATFORM == "windows") ? system("cls") : system("clear");
+			}
 		}
 	}
 
@@ -101,7 +127,7 @@ void Start(int argc, char* argv[]) {
 }
 
 double* ArgProcess(int argc, char* argv[]) {
-	double args[6] = { -1, -1, -1, -1, -1, -1 };
+	double args[8] = { -1, -1, -1, -1, -1, -1, -1, -1};
 
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i - 1], "-p") == 0) {
@@ -122,6 +148,12 @@ double* ArgProcess(int argc, char* argv[]) {
 		else if (strcmp(argv[i], "--advanced") == 0) {
 			args[5] = 1;
 		}
+		else if (strcmp(argv[i], "--old") == 0) {
+			args[6] = 1;
+		}
+		else if (strcmp(argv[i], "--realtime") == 0) {
+			args[7] = 1;
+		}
 	}
 
 	return args;
@@ -129,20 +161,50 @@ double* ArgProcess(int argc, char* argv[]) {
 
 int PowerCheck(int power) { return (0 <= power <= 8) ? abs(power) : ((power < 0) ? 0 : ((power > 8) ? 8 : 0)); }
 
-void FrameShow(cv::Mat image, int contrast, bool advanced, bool video) {
-	int width = (!video) ? image.size().width : image.size().width*3;
+std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool advanced, bool old, double s) {
+	std::vector<std::string> ret;
+	cv::Mat image;
+	int totalFrames = cap.get(cv::CAP_PROP_FRAME_COUNT);
+	int currentFrame = 1;
+
+	while (cap.read(image)) {
+		cv::resize(image, image, cv::Size(round((image.size().width / 24) * s), round((image.size().height / 24) * s)), 0.5, 0.5, cv::INTER_LINEAR);
+		std::string frame = TranslateToAscii(image, contrast, advanced, true, old);
+		ret.push_back(frame);
+
+		std::cerr << "Buffering...\n[";
+		int pos = (currentFrame * 100) / totalFrames;
+		for (int i = 0; i < 100; i++) {
+			if (i <= pos) std::cerr << "=";
+			else std::cerr << " ";
+		}
+		std::cerr << "]";
+		std::fflush(stdout);
+
+		currentFrame++;
+		image.release();
+	}
+
+	return ret;
+}
+
+std::string TranslateToAscii(cv::Mat image, int contrast, bool advanced, bool video, bool old) {
+	std::string ret;
+	int width = (!video) ? image.size().width : image.size().width * 3;
 	int height = image.size().height;
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			int power = (advanced) ? to_92(abs(image.at<uint_fast8_t>(i, j))) : ceil(abs(log2(image.at<uint_fast8_t>(i, j))));
+			int power = (old) ? round(abs(log2(image.at<uint_fast8_t>(i, j)))) : ((advanced) ? to_34(abs(image.at<uint_fast8_t>(i, j))) : image.at<uint_fast8_t>(i, j) / (256 / strlen(alphabet)));
 			char c = (power > 0 && power > contrast) ? ((!advanced) ? alphabet[power] : advancedAlphabet[power]) : ' ';
-			std::cerr << c;
+			ret += c;
 		}
-		std::cerr << std::endl;
+		ret += "\n";
 	}
+
+	return ret;
 }
 
-int to_92(int index) {
-	return (92 * ((100 * index) / 256)) / 100;
+int to_34(int index) {
+	return (34 * ((100 * index) / 256)) / 100;
 }
