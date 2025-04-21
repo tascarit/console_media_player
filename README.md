@@ -15,7 +15,11 @@ Can show images or play mp4 files in console using OpenCV
 
 --video *(to pass videos)*
 
---advanced *(to use all 92 ASCII printable characters)*
+--advanced *(to use 34 ASCII printable characters)*
+
+--realtime *(no general video buffering, but frame buffering will still work)*
+
+--old *(use old logariphmic pixel to character converting)*
 
 **the {} symbols should not be added**
 
@@ -24,8 +28,21 @@ Preview image:
 ![alt text](https://i.imgur.com/4xVG5bI.jpeg)
 
 
-Linux installation guide:
+Linux (Debian 12) installation guide:
 
-Download and build opencv: [link](https://docs.opencv.org/4.x/d7/d9f/tutorial_linux_install.html)
+Dependencies : git 2.39.5 or higher, cmake 3.25.1 or higher, make
 
-`g++ main.cpp -o cmp` if not works try this: `g++ main.cpp -o cmp -I{Path to OpenCV include} -L{Path to OpenCV Libraries}`
+Download and build (opencv)[https://github.com/opencv/opencv]
+
+Example:
+```
+cd ~/Downloads
+mkdir opencv_installation
+cd opencv_installation
+git clone https://github.com/opencv/opencv
+cd opencv
+mkdir build
+cd build
+cmake ..
+make -j4
+```
