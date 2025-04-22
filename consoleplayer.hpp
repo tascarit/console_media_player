@@ -4,35 +4,36 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <chrono>
+#include <utility>
 #include <thread>
 
 #include "defs.hpp"
+#include "yt_extractor.hpp"
+#include "utility.hpp"
 
 #if defined(__linux__)
 #define PLATFORM "linux"
 #elif defined(_WIN32) 
 #define PLATFORM "windows"
-#include <Windows.h>
 #else
 #define PLATFORM "windows"
 #endif
 
+#define ARGS_COUNT 8
+
 int PowerCheck(int power);
-std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool advanced, bool old, double s, bool colored);
+std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, std::vector<int> args);
 int to_34(int index);
-std::string TranslateToAscii(cv::Mat image, int contrast, bool advanced, bool video, bool old, cv::Mat color, bool colored);
-std::string GetANSIICode(cv::Vec3b pixel);
+std::string TranslateToAscii(cv::Mat image, int contrast, cv::Mat color, int width, int height, std::vector<int> args);
+std::string GetANSIICode(cv::Vec3b pixel, bool pixelated);
+std::string Pixelated(cv::Mat image, cv::Mat color, int width, int height, std::vector<int> args);
 
 void Start(int argc, char* argv[]) {
 	int contrast = 1;
 	std::string path = "";
-	double s = 1;
 	int fps = 60;
-	bool video = false;
-	bool old = false;
-	bool advanced = false;
-	bool realtime = false;
-	bool colored = false;
+
+	std::vector<int> args(ARGS_COUNT);
 
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i - 1], "-p") == 0) {
@@ -42,25 +43,31 @@ void Start(int argc, char* argv[]) {
 			contrast = atoi(argv[i]);
 		}
 		else if (strcmp(argv[i], "--video") == 0) {
-			video = true;
+			args[0] = 1;
 		}
 		else if (strcmp(argv[i - 1], "-s") == 0) {
-			s = atof(argv[i]);
+			args[7] = atof(argv[i]);
 		}
 		else if (strcmp(argv[i - 1], "-fps") == 0) {
 			fps = atof(argv[i]);
 		}
 		else if (strcmp(argv[i], "--advanced") == 0) {
-			advanced = true;
+			args[1] = 1;
 		}
 		else if (strcmp(argv[i], "--old") == 0) {
-			old = true;
+			args[2] = 1;
 		}
 		else if (strcmp(argv[i], "--realtime") == 0) {
-			realtime=true;
+			args[3] = 1;
 		}
 		else if (strcmp(argv[i], "--color") == 0) {
-			colored = true;
+			args[4] = 1;
+		}
+		else if (strcmp(argv[i], "--link") == 0) {
+			args[5] = 1;
+		}
+		else if (strcmp(argv[i], "--pixel") == 0) {
+			args[6] = 1;
 		}
 	}
 
@@ -68,8 +75,8 @@ void Start(int argc, char* argv[]) {
 		std::cout << "No path has been passed." << path << std::endl;
 		exit(0);
 	}
-	if (s < 0.1) {
-		s = 0.1;
+	if (args[7] < 0.1) {
+		args[7] = 0.1;
 	}
 	
 	// IDK Should i keep or delete this part because for me it works fine without enabling terminal processing... (windows 11)
@@ -97,15 +104,18 @@ void Start(int argc, char* argv[]) {
 
 	fps = 1000 / fps;
 
-	if (!video) {
+	if (args[0] != 1) {
 		cv::Mat image = cv::imread(path);
 		cv::Mat mat;
 
-		cv::resize(image, image, cv::Size((image.size().width / 12) * s, (image.size().height / 24) * s), 0.5, 0.5, cv::INTER_LINEAR);
+		int width = (image.size().width / 12)* args[7];
+		int height = (image.size().height / 24) * args[7];
+
+		cv::resize(image, image, cv::Size(width, height), 0.5, 0.5, cv::INTER_LINEAR);
 
 		cv::cvtColor(image, mat, cv::COLOR_BGR2GRAY);
 
-		std::string frame = TranslateToAscii(mat, contrast, advanced, false, old, image, colored);
+		std::string frame = TranslateToAscii(mat, contrast, image, width, height, args);
 
 		std::cerr << frame << std::endl;
 
@@ -113,22 +123,38 @@ void Start(int argc, char* argv[]) {
 		image.release();
 	}
 	else {
-		cv::VideoCapture cap(path);
+		if (args[5])
+			path = GetStreamUrl(path);
+
+		cv::VideoCapture cap(path, cv::CAP_FFMPEG);
+
+		if (!cap.isOpened()) {
+			std::cerr << "Error opening stream" << std::endl;
+			return;
+		}
 
 		std::ios_base::sync_with_stdio(false);
 		std::cin.tie(NULL);
 
-		if (realtime) {
+		if (args[3] == 1) {
 			cv::Mat frame;
 
 			while (cap.read(frame)) {
 
 				cv::Mat gray;
 
-				cv::resize(frame, frame, cv::Size((frame.size().width / 12) * s, (frame.size().height / 24) * s), 0.5, 0.5);
+				int width = (frame.size().width / 12) * args[7];
+				int height = (frame.size().height / 24) * args[7];
+
+				std::pair<int, int> wh = GetTerminalSize();
+
+				width = wh.first;
+				height = wh.second;
+
+				cv::resize(frame, frame, cv::Size(width, height), 0.5, 0.5);
 				cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
-				std::string output = TranslateToAscii(gray, contrast, advanced, video, old, frame, colored);
+				std::string output = (args[6] == 1) ? Pixelated(gray, frame, width, height, args) : TranslateToAscii(gray, contrast, frame, width, height, args);
 				std::cerr << output << std::endl;
 				std::this_thread::sleep_for(std::chrono::milliseconds(fps*2));
 					
@@ -141,7 +167,7 @@ void Start(int argc, char* argv[]) {
 			cap.release();
 		}
 		else {
-			std::vector<std::string> videoMatrix = Bufferize(cap, contrast, advanced, old, s, colored);
+			std::vector<std::string> videoMatrix = Bufferize(cap, contrast, args);
 
 			cap.release();
 
@@ -159,7 +185,7 @@ void Start(int argc, char* argv[]) {
 
 int PowerCheck(int power) { return (0 <= power <= 8) ? abs(power) : ((power < 0) ? 0 : ((power > 8) ? 8 : 0)); }
 
-std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool advanced, bool old, double s, bool colored) {
+std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, std::vector<int> args) {
 	std::vector<std::string> ret;
 	cv::Mat image;
 	int totalFrames = cap.get(cv::CAP_PROP_FRAME_COUNT);
@@ -169,10 +195,13 @@ std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool adva
 
 		cv::Mat gray;
 
-		cv::resize(image, image, cv::Size(round((image.size().width / 12) * s), round((image.size().height / 24) * s)), 0.5, 0.5, cv::INTER_LINEAR);
+		int width = (image.size().width / 12) * args[7];
+		int height = (image.size().height / 24) * args[7];
+
+		cv::resize(image, image, cv::Size(width, height), 0.5, 0.5, cv::INTER_LINEAR);
 		cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
 
-		std::string frame = TranslateToAscii(gray, contrast, advanced, true, old, image, colored);
+		std::string frame = (args[6] == 1) ? Pixelated(gray, image, width, height, args) : TranslateToAscii(gray, contrast, image, width, height, args);
 		ret.push_back(frame);
 
 		std::cerr << "Buffering...\n[";
@@ -191,20 +220,39 @@ std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, bool adva
 	return ret;
 }
 
-std::string TranslateToAscii(cv::Mat image, int contrast, bool advanced, bool video, bool old, cv::Mat color, bool colored) {
+std::string TranslateToAscii(cv::Mat image, int contrast, cv::Mat color, int width, int height, std::vector<int> args) {
 	std::string ret;
-	int width = image.size().width;
-	int height = image.size().height;
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			int power = (old) ? round(abs(log2(image.at<uint_fast8_t>(i, j)))) : ((advanced) ? to_34(abs(image.at<uint_fast8_t>(i, j))) : image.at<uint_fast8_t>(i, j) / (256 / strlen(alphabet)));
-			char c = (power > 0 && power > contrast) ? ((!advanced) ? alphabet[power] : advancedAlphabet[power]) : ' ';
+			char c = ' ';
+			if (args[6] != 1) {
+				int power = (args[2] == 1) ? round(abs(log2(image.at<uint_fast8_t>(i, j)))) : ((args[1] == 1) ? to_34(abs(image.at<uint_fast8_t>(i, j))) : image.at<uint_fast8_t>(i, j) / (256 / strlen(alphabet)));
+				c = (power > 0 && power > contrast) ? ((args[1] != 1) ? alphabet[power] : advancedAlphabet[power]) : ' ';
+			}
 
-			cv::Vec3b pixel = color.at<cv::Vec3b>(i, j);
-			std::string color = GetANSIICode(pixel);
+			cv::Vec3b clr = color.at<cv::Vec3b>(i, j);
+			std::string color = GetANSIICode(clr, true);
 
-			ret += (colored) ? ((c != ' ') ? (color + c + "\033[0m") : (" ")) : std::string(1,c);
+			ret += (args[4] == 1) ? (color + c + "\033[0m") : (" ");
+		}
+		ret += "\n";
+	}
+
+	return ret;
+}
+
+std::string Pixelated(cv::Mat image, cv::Mat color, int width, int height, std::vector<int> args) {
+	std::string ret;
+
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			char c = ' ';
+
+			cv::Vec3b clr = color.at<cv::Vec3b>(i, j);
+			std::string color = GetANSIICode(clr, args[6] == 1);
+
+			ret += color + c + "\033[0m";
 		}
 		ret += "\n";
 	}
@@ -216,10 +264,10 @@ int to_34(int index) {
 	return (34 * ((100 * index) / 256)) / 100;
 }
 
-std::string GetANSIICode(cv::Vec3b pixel) {
+std::string GetANSIICode(cv::Vec3b pixel, bool pixelated) {
 	int blue = pixel[0];
 	int green = pixel[1];
 	int red = pixel[2];
 
-	return "\033[38;2;" + std::to_string(red) + ';' + std::to_string(green) + ';' + std::to_string(blue) + 'm';
+	return ((!pixelated) ? "\033[38;2;" : "\033[48;2;") + std::to_string(red) + ';' + std::to_string(green) + ';' + std::to_string(blue) + 'm';
 }
