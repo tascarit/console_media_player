@@ -21,7 +21,11 @@ Can show colored images or play mp4 files in console using OpenCV
 
 --old *(use old logariphmic pixel to character converting)*
 
--- color *(translates to colored symbols, this works only on windows 10+/linux/unix and only in console)*
+--color *(translates to colored symbols, this works only on windows 10+/linux/unix and only in console)*
+
+--pixel *(doesn't print ASCII characters, prints colored whitespaces instead)*
+
+--link *(use this flag if the path provided is youtube video link)*
 
 **the {} symbols should not be added**
 
@@ -29,6 +33,8 @@ Preview image:
 
 ![alt text](https://i.imgur.com/nAapd2R.jpeg)
 
+
+# Can be used with yt-dlp executable/installed if provided path is youtube video link
 
 Linux (Debian 12) installation guide:
 
@@ -66,4 +72,3 @@ Example usage:
 ```
 ./main -p PATH --video --realtime
 ```
-
