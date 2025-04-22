@@ -27,6 +27,10 @@ string GetStreamUrl(const string& youtube_url) {
 
     try {
         string url = ExecuteCommand(cmd.c_str());
+        size_t pos = url.find('\n');
+
+        if (pos != std::string::npos)
+            url = url.substr(0, pos);
 
         return url;
     }
