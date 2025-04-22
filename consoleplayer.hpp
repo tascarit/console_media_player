@@ -232,7 +232,7 @@ std::string TranslateToAscii(cv::Mat image, int contrast, cv::Mat color, int wid
 			}
 
 			cv::Vec3b clr = color.at<cv::Vec3b>(i, j);
-			std::string color = GetANSIICode(clr, true);
+			std::string color = GetANSIICode(clr, false);
 
 			ret += (args[4] == 1) ? (color + c + "\033[0m") : (" ");
 		}
@@ -250,7 +250,7 @@ std::string Pixelated(cv::Mat image, cv::Mat color, int width, int height, std::
 			char c = ' ';
 
 			cv::Vec3b clr = color.at<cv::Vec3b>(i, j);
-			std::string color = GetANSIICode(clr, args[6] == 1);
+			std::string color = GetANSIICode(clr, true);
 
 			ret += color + c + "\033[0m";
 		}
