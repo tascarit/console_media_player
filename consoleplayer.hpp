@@ -115,7 +115,7 @@ void Start(int argc, char* argv[]) {
 
 		cv::cvtColor(image, mat, cv::COLOR_BGR2GRAY);
 
-		std::string frame = TranslateToAscii(mat, contrast, image, width, height, args);
+		std::string frame = (args[6] == 1) ? Pixelated(mat, image, width, height, args) : TranslateToAscii(mat, contrast, image, width, height, args);
 
 		std::cerr << frame << std::endl;
 
