@@ -1,4 +1,5 @@
 #include <utility>
+#include "defs.hpp"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -28,4 +29,40 @@ std::pair<int, int> GetTerminalSize() {
 #endif
 
     return { cols, rows };
+}
+
+std::string GenerateLabel() {
+    int r = 245, g = 204, b = 159;
+
+    std::string ret = "";
+
+    for (int i = 0; i < 5; i++) {
+        ret += '|';
+        if (i != 2) {
+            for (int j = 0; j < 92; j++) {
+                ret += "\033[38;2;" + to_string(min(r, 255)) + ';' + to_string(min(g, 255)) + ';' + to_string(min(b, 255)) + 'm' + '=' + "\033[0m";
+                (g <= 159) ? r++ : ((r <= 159) ? ((b >= 245) ? g-- : b++) : r--);
+            }
+        }
+        else {
+            for (int k = 0; k < 35; k++) {
+                ret += "\033[38;2;155;255;143m=\033[0m";
+            }
+            ret += "[Console Media Player]";
+            for (int k = 0; k < 35; k++) {
+                ret += "\033[38;2;155;255;143m=\033[0m";
+            }
+            (g <= 159) ? r++ : ((r <= 159) ? ((b >= 245) ? g-- : b++) : r--);
+        }
+        ret += "|\n";
+    }
+
+    ret += '\n';
+
+    return ret;
+}
+
+void HelpCommand() {
+    std::string label = GenerateLabel();
+    std::cerr << label << helpCommand << std::endl;
 }

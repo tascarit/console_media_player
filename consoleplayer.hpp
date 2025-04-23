@@ -1,11 +1,12 @@
-#include <string>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+
 #include <iostream>
 #include <chrono>
 #include <utility>
 #include <thread>
+#include <string>
 
 #include "defs.hpp"
 #include "yt_extractor.hpp"
@@ -19,7 +20,7 @@
 #define PLATFORM "windows"
 #endif
 
-#define ARGS_COUNT 8
+#define ARGS_COUNT 10
 
 int PowerCheck(int power);
 std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, std::vector<int> args);
@@ -69,6 +70,18 @@ void Start(int argc, char* argv[]) {
 		else if (strcmp(argv[i], "--pixel") == 0) {
 			args[6] = 1;
 		}
+		else if (strcmp(argv[i], "--audio") == 0) {
+			args[8] = 1;
+		}
+		else if (strcmp(argv[i], "--help") == 0) {
+			args[9] = 1;
+		}
+	}
+
+	if (args[9] == 1)
+	{
+		HelpCommand();
+		return;
 	}
 
 	if (path.size() == 0) {
@@ -143,13 +156,13 @@ void Start(int argc, char* argv[]) {
 
 				cv::Mat gray;
 
-				int width = (frame.size().width / 12) * args[7];
-				int height = (frame.size().height / 24) * args[7];
+				int w = (frame.size().width / 12) * args[7];
+				int h = (frame.size().height / 24) * args[7];
 
 				std::pair<int, int> wh = GetTerminalSize();
 
-				width = wh.first;
-				height = wh.second;
+				double width = wh.first;
+				double height = h*(width/w);
 
 				cv::resize(frame, frame, cv::Size(width, height), 0.5, 0.5);
 				cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
