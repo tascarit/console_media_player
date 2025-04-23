@@ -5,6 +5,8 @@ Can show colored images or play mp4 files in console using OpenCV
 
 ## [Basic and currently existing parameters]
 
+--help *(displays this info)*
+
 -p {path} *(path to the image/video file)*
 
 -c {number} *(the darkenify of the frame, the more number is, the more dark parts become more darker)*
