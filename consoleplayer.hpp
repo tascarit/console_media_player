@@ -20,7 +20,7 @@
 #define PLATFORM "windows"
 #endif
 
-#define ARGS_COUNT 10
+#define ARGS_COUNT 11
 
 int PowerCheck(int power);
 std::vector<std::string> Bufferize(cv::VideoCapture cap, int contrast, std::vector<int> args);
@@ -35,6 +35,8 @@ void Start(int argc, char* argv[]) {
 	int fps = 60;
 
 	std::vector<int> args(ARGS_COUNT);
+
+	args[7] = 1;
 
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i - 1], "-p") == 0) {
@@ -76,6 +78,9 @@ void Start(int argc, char* argv[]) {
 		else if (strcmp(argv[i], "--help") == 0) {
 			args[9] = 1;
 		}
+		else if (strcmp(argv[i], "--gs") == 0) {
+			args[10] = 1;
+		}
 	}
 
 	if (args[9] == 1)
@@ -89,7 +94,7 @@ void Start(int argc, char* argv[]) {
 		exit(0);
 	}
 	if (args[7] < 0.1) {
-		args[7] = 0.1;
+		args[7] = 1;
 	}
 	
 	// IDK Should i keep or delete this part because for me it works fine without enabling terminal processing... (windows 11)
@@ -245,9 +250,19 @@ std::string TranslateToAscii(cv::Mat image, int contrast, cv::Mat color, int wid
 			}
 
 			cv::Vec3b clr = color.at<cv::Vec3b>(i, j);
-			std::string color = GetANSIICode(clr, false);
 
-			ret += (args[4] == 1) ? (color + c + "\033[0m") : (" ");
+			if (args[4] == 1) {
+				std::string color = GetANSIICode(clr, false);
+				ret += color + c + "\033[0m";
+			}
+			else if (args[10] == 1){
+				int x = (clr[0] + clr[1] + clr[2]) / 3;
+				std::string color = GetANSIICode(cv::Vec3b(x,x,x), false);
+				ret += color + c + "\033[0m";
+			}
+			else {
+				ret += c;
+			}
 		}
 		ret += "\n";
 	}

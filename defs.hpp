@@ -14,4 +14,5 @@ std::string helpCommand = "--help (shows this text)\n"
 "--old (use old logariphmic pixel to character converting)\n"
 "--color (translates to colored symbols, this works only on windows 10 + / linux / unix and only in console)\n"
 "--pixel (doesn't print ASCII characters, prints colored whitespaces instead)\n"
+"--gs (gray scale colored format)\n"
 "--link (use this flag if the path provided is youtube video link)\n\n";
