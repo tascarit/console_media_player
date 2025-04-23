@@ -29,6 +29,8 @@ Can show colored images or play mp4 files (or videos from youtube) in console us
 
 --link *(use this flag if the path provided is youtube video link)*
 
+--gs *(gray scale colored format)*
+
 **the {} symbols should not be added**
 
 Preview image:
