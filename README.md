@@ -1,5 +1,5 @@
 # console_media_player
-Can show colored images or play mp4 files in console using OpenCV
+Can show colored images or play mp4 files (or videos from youtube) in console using OpenCV
 
 ### DEAD BRAINCELLS CODE JUMPSCARE ALERT!!!
 
