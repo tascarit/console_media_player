@@ -13,7 +13,7 @@ Can show colored images or play mp4 files (or videos from youtube) in console us
 
 -fps {number} *(thats supposed to be FPS but image prints to the console already kinda slow, default is 60)*
 
--s {number} *(frame size multiplier, suggesting to not exceed 1, this parameter can be floating point number)*
+-s {number} *(frame size multiplier)*
 
 --video *(to pass videos)*
 
